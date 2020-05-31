@@ -80,7 +80,7 @@ class ServiceNowAdapter extends EventEmitter {
   connect() {
     // As a best practice, Itential recommends isolating the health check action
     // in its own method.
-    this.healthcheckGet((result, error) => {
+    this.healthcheck((result, error) => {
       if (error) {
         console.error(`\nError returned from GET request:\n${JSON.stringify(error)}`);
       }
@@ -88,19 +88,11 @@ class ServiceNowAdapter extends EventEmitter {
         console.log(`\nResponse returned from GET request:\n${JSON.stringify(result)}`)
       }
     });
-    this.healthcheckPost((result, error) => {
-      if (error) {
-        console.error(`\nError returned from POST request:\n${JSON.stringify(error)}`);
-      }
-      else {
-        console.log(`\nResponse returned from POST request:\n${JSON.stringify(result)}`)
-      }
-    });
   }
 
   /**
    * @memberof ServiceNowAdapter
-   * @method healthcheckGet
+   * @method healthcheck
    * @summary Check ServiceNow Health
    * @description Verifies external system is available and healthy.
    *   Calls method emitOnline if external system is available.
@@ -108,61 +100,8 @@ class ServiceNowAdapter extends EventEmitter {
    * @param {ServiceNowAdapter~requestCallback} [callback] - The optional callback
    *   that handles the response.
    */
-  healthcheckGet(callback) {
+  healthcheck(callback) {
     this.getRecord((result, error) => {
-      /**
-       * For this lab, complete the if else conditional
-       * statements that check if an error exists
-       * or the instance was hibernating. You must write
-       * the blocks for each branch.
-       */
-
-      if (error) {
-        /**
-         * Write this block.
-         * If an error was returned, we need to emit OFFLINE.
-         * Log the returned error using IAP's global log object
-         * at an error severity. In the log message, record
-         * this.id so an administrator will know which ServiceNow
-         * adapter instance wrote the log message in case more
-         * than one instance is configured.
-         * If an optional IAP callback function was passed to
-         * healthcheck(), execute it passing the error seen as an argument
-         * for the callback's errorMessage parameter.
-         */
-        this.emitOffline();
-        return callback(null, error);
-
-      } else {
-        /**
-         * Write this block.
-         * If no runtime problems were detected, emit ONLINE.
-         * Log an appropriate message using IAP's global log object
-         * at a debug severity.
-         * If an optional IAP callback function was passed to
-         * healthcheck(), execute it passing this function's result
-         * parameter as an argument for the callback function's
-         * responseData parameter.
-         */
-        this.emitOnline();
-        return callback(result, null);
-
-      }
-    });
-  }
-
-  /**
- * @memberof ServiceNowAdapter
- * @method healthcheckPost
- * @summary Check ServiceNow Health
- * @description Verifies external system is available and healthy.
- *   Calls method emitOnline if external system is available.
- *
- * @param {ServiceNowAdapter~requestCallback} [callback] - The optional callback
- *   that handles the response.
- */
-  healthcheckPost(callback) {
-    this.postRecord((result, error) => {
       /**
        * For this lab, complete the if else conditional
        * statements that check if an error exists
@@ -257,29 +196,7 @@ class ServiceNowAdapter extends EventEmitter {
      * Note how the object was instantiated in the constructor().
      * get() takes a callback function.
      */
-    this.connector.get((results, error) => {
-      let resBody = JSON.parse(results.body);
-      let resBodyLen = resBody.result.length;
-
-      let desiredResObj = ["number", "active", "priority", "description", "work_start", "work_end", "sys_id"];
-      let filteredResArray = [];
-
-      for (let i = 0; i < resBodyLen; i++) {
-        let filteredResObj = Object.keys(resBody.result[i])
-          .filter(key => desiredResObj.includes(key))
-          .reduce((obj, key) => {
-            obj[key] = resBody.result[i][key];
-            return obj;
-          }, {});
-
-        filteredResObj["change_ticket_number"] = filteredResObj["number"];
-        delete filteredResObj["number"];
-        filteredResObj["change_ticket_key"] = filteredResObj["sys_id"];
-        delete filteredResObj["sys_id"];
-        filteredResArray.push(filteredResObj);
-      }
-      callback(filteredResArray, error)
-    });
+    this.connector.get((results, error) => callback(results, error));
   }
 
   /**
@@ -298,24 +215,7 @@ class ServiceNowAdapter extends EventEmitter {
      * Note how the object was instantiated in the constructor().
      * post() takes a callback function.
      */
-    this.connector.post((results, error) => {
-      let resBody = JSON.parse(results.body);
-
-      let desiredResObj = ["number", "active", "priority", "description", "work_start", "work_end", "sys_id"];
-
-      let filteredResObj = Object.keys(resBody.result)
-        .filter(key => desiredResObj.includes(key))
-        .reduce((obj, key) => {
-          obj[key] = resBody.result[key];
-          return obj;
-        }, {});
-
-      filteredResObj["change_ticket_number"] = filteredResObj["number"];
-      delete filteredResObj["number"];
-      filteredResObj["change_ticket_key"] = filteredResObj["sys_id"];
-      delete filteredResObj["sys_id"];
-      return callback(filteredResObj, error)
-    })
+    this.connector.post((results, error) => callback(results, error));
   }
 }
 

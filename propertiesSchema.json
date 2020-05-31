@@ -22,9 +22,9 @@
         },
         "password": {
           "type": "string",
-          "default": "jMk@1992",
+          "default": "$ENC89c78c0a152ca81796db49409ddb27188585218daed34599",
           "examples": [
-            "jMk@1992"
+            "$ENC89c78c0a152ca81796db49409ddb27188585218daed34599"
           ]
         }
       },
